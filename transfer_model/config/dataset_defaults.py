@@ -21,6 +21,7 @@ from dataclasses import dataclass
 @dataclass
 class MeshFolder:
     data_folder: str = 'data/meshes'
+    frame_sample: str = '0 1000 1'
 
 
 @dataclass

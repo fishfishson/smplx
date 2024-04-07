@@ -21,7 +21,7 @@ import os
 import os.path as osp
 
 import numpy as np
-from psbody.mesh import Mesh
+# from psbody.mesh import Mesh
 import trimesh
 
 import torch
@@ -33,6 +33,7 @@ class MeshFolder(Dataset):
     def __init__(
         self,
         data_folder: str,
+        frame_sample: str = '0 1000 1',
         transforms=None,
         exts: Optional[Tuple] = None
     ) -> None:
@@ -47,11 +48,18 @@ class MeshFolder(Dataset):
         logger.info(
             f'Building mesh folder dataset for folder: {self.data_folder}')
 
-        self.data_paths = np.array([
+        data_paths = np.array(sorted([
             osp.join(self.data_folder, fname)
             for fname in os.listdir(self.data_folder)
             if any(fname.endswith(ext) for ext in exts)
-        ])
+        ]))
+
+        frame_sample = frame_sample.split(' ')
+        frame_sample = [int(x) for x in frame_sample]
+        data_paths = data_paths[frame_sample[0]:frame_sample[1]:frame_sample[2]]
+        self.data_paths = data_paths
+        print(self.data_paths)
+
         self.num_items = len(self.data_paths)
 
     def __len__(self) -> int:

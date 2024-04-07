@@ -119,22 +119,22 @@ def main(
         output_path = output_folder / "{0:04d}.obj".format(pose_idx[0])
         tri_mesh.export(str(output_path))
 
-        if pose_idx[0] == 0:
-            print("displaying first pose, exit window to continue processing")
-            mesh = pyrender.Mesh.from_trimesh(tri_mesh)
+        # if pose_idx[0] == 0:
+        #     print("displaying first pose, exit window to continue processing")
+        #     mesh = pyrender.Mesh.from_trimesh(tri_mesh)
 
-            scene = pyrender.Scene()
-            scene.add(mesh)
+        #     scene = pyrender.Scene()
+        #     scene.add(mesh)
 
-            if plot_joints:
-                sm = trimesh.creation.uv_sphere(radius=0.005)
-                sm.visual.vertex_colors = [0.9, 0.1, 0.1, 1.0]
-                tfs = np.tile(np.eye(4), (len(joints), 1, 1))
-                tfs[:, :3, 3] = joints
-                joints_pcl = pyrender.Mesh.from_trimesh(sm, poses=tfs)
-                scene.add(joints_pcl)
+        #     if plot_joints:
+        #         sm = trimesh.creation.uv_sphere(radius=0.005)
+        #         sm.visual.vertex_colors = [0.9, 0.1, 0.1, 1.0]
+        #         tfs = np.tile(np.eye(4), (len(joints), 1, 1))
+        #         tfs[:, :3, 3] = joints
+        #         joints_pcl = pyrender.Mesh.from_trimesh(sm, poses=tfs)
+        #         scene.add(joints_pcl)
 
-            pyrender.Viewer(scene, use_raymond_lighting=True)
+        #     pyrender.Viewer(scene, use_raymond_lighting=True)
 
 
 if __name__ == "__main__":
@@ -167,7 +167,7 @@ if __name__ == "__main__":
         help="Number of expression coefficients.",
     )
     parser.add_argument(
-        "--ext", type=str, default="npz", help="Which extension to use for loading"
+        "--ext", type=str, default="pkl", help="Which extension to use for loading"
     )
     parser.add_argument(
         "--sample-expression",

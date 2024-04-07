@@ -58,6 +58,8 @@ class OptimConfig:
     gtol: float = 1e-8
     ftol: float = -1.0
     maxiters: int = 100
+    shape_only: bool = False
+    shape_file: str = ''
 
     lbfgs: LBFGS = LBFGS()
     sgd: SGD = SGD()

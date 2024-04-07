@@ -37,7 +37,7 @@ def main() -> None:
     exp_cfg = parse_args()
 
     if torch.cuda.is_available() and exp_cfg["use_cuda"]:
-        device = torch.device('cuda')
+        device = torch.device('cuda:0')
     else:
         device = torch.device('cpu')
         if exp_cfg["use_cuda"]:
@@ -76,27 +76,41 @@ def main() -> None:
     data_obj_dict = build_dataloader(exp_cfg)
 
     dataloader = data_obj_dict['dataloader']
+    if os.path.exists(exp_cfg.optim.shape_file):
+        betas = np.load(exp_cfg.optim.shape_file)['betas']
+        extras = {'betas': torch.from_numpy(betas).to(device=device).float()}
 
     for ii, batch in enumerate(tqdm(dataloader)):
         for key in batch:
             if torch.is_tensor(batch[key]):
                 batch[key] = batch[key].to(device=device)
         var_dict = run_fitting(
-            exp_cfg, batch, body_model, def_matrix, mask_ids)
+            exp_cfg, batch, body_model, def_matrix, mask_ids, **extras)
         paths = batch['paths']
+        for k, v in var_dict.items():
+            if torch.is_tensor(v):
+                var_dict[k] = v.detach().cpu().numpy()
 
         for ii, path in enumerate(paths):
             _, fname = osp.split(path)
+            data = dict()
+            for k, v in var_dict.items():
+                if k != 'faces':
+                    data[k] = v[ii:ii+1]
+                else:
+                    data[k] = v
+            # output_path = osp.join(
+            #     output_folder, f'{osp.splitext(fname)[0]}.pkl')
+            # with open(output_path, 'wb') as f:
+            #     pickle.dump(var_dict, f)
+            output_path = osp.join(
+                output_folder, f'{osp.splitext(fname)[0]}.npz')
+            np.savez_compressed(output_path, **data)
 
             output_path = osp.join(
-                output_folder, f'{osp.splitext(fname)[0]}.pkl')
-            with open(output_path, 'wb') as f:
-                pickle.dump(var_dict, f)
-
-            output_path = osp.join(
-                output_folder, f'{osp.splitext(fname)[0]}.obj')
+                output_folder, f'{osp.splitext(fname)[0]}.ply')
             mesh = np_mesh_to_o3d(
-                var_dict['vertices'][ii], var_dict['faces'])
+                data['vertices'][0], data['faces'])
             o3d.io.write_triangle_mesh(output_path, mesh)
 
 

@@ -43,7 +43,8 @@ def summary_closure(gt_vertices, var_dict, body_model, mask_ids=None):
             param_dict[key] = var
     body_model_output = body_model(
         return_full_pose=True, get_skin=True, **param_dict)
-    est_vertices = body_model_output['vertices']
+    # est_vertices = body_model_output['vertices']
+    est_vertices = body_model_output.vertices
     if mask_ids is not None:
         est_vertices = est_vertices[:, mask_ids]
         gt_vertices = gt_vertices[:, mask_ids]
@@ -113,7 +114,8 @@ def build_edge_closure(
     per_part: bool = True,
     part_key: Optional[str] = None,
     jidx: Optional[int] = None,
-    part: Optional[Tensor] = None
+    part: Optional[Tensor] = None,
+    params_to_opt: Optional[Tensor] = None,
 ) -> Callable:
     ''' Builds the closure for the edge objective
     '''
@@ -122,7 +124,7 @@ def build_edge_closure(
 
     if per_part:
         params_to_opt = [part]
-    else:
+    elif params_to_opt is None:
         params_to_opt = [p for key, p in var_dict.items() if 'pose' in key]
 
     model_forward = build_model_forward_closure(
@@ -134,7 +136,8 @@ def build_edge_closure(
             optimizer.zero_grad()
 
         body_model_output = model_forward()
-        est_vertices = body_model_output['vertices']
+        # est_vertices = body_model_output['vertices']
+        est_vertices = body_model_output.vertices
 
         loss = edge_loss(est_vertices, gt_vertices)
         if backward:
@@ -181,7 +184,8 @@ def build_vertex_closure(
             optimizer.zero_grad()
 
         body_model_output = model_forward()
-        est_vertices = body_model_output['vertices']
+        # est_vertices = body_model_output['vertices']
+        est_vertices = body_model_output.vertices
 
         loss = vertex_loss(
             est_vertices[:, mask_ids] if mask_ids is not None else
@@ -259,7 +263,8 @@ def run_fitting(
     batch: Dict[str, Tensor],
     body_model: nn.Module,
     def_matrix: Tensor,
-    mask_ids: Optional = None
+    mask_ids: None,
+    **kwargs,
 ) -> Dict[str, Tensor]:
     ''' Runs fitting
     '''
@@ -276,6 +281,14 @@ def run_fitting(
 
     # Build the optimizer object for the current batch
     optim_cfg = exp_cfg.get('optim', {})
+    if optim_cfg.shape_only:
+        for k in var_dict.keys():
+            if k == 'betas' or k == 'transl': continue
+            else: var_dict[k].requires_grad_(False)
+    elif 'betas' in kwargs:
+        var_dict['betas'].requires_grad_(False)
+        var_dict['betas'][:] = kwargs['betas']
+    else: pass
 
     def_vertices = apply_deformation_transfer(def_matrix, vertices, faces)
 
@@ -330,19 +343,23 @@ def run_fitting(
                 with torch.no_grad():
                     var[:, jidx] = part
     else:
-        optimizer_dict = build_optimizer(list(var_dict.values()), optim_cfg)
-        closure = build_edge_closure(
-            body_model, var_dict, edge_loss, optimizer_dict,
-            def_vertices, per_part=per_part)
+        params = []
+        for k, v in var_dict.items():
+            if 'pose' in k and v.requires_grad: params.append(v)
+        if len(params) > 0:
+            optimizer_dict = build_optimizer(params, optim_cfg)
+            closure = build_edge_closure(
+                body_model, var_dict, edge_loss, optimizer_dict,
+                def_vertices, per_part=per_part, params_to_opt=params)
 
-        minimize(optimizer_dict['optimizer'], closure,
-                 params=var_dict.values(),
-                 summary_closure=log_closure,
-                 summary_steps=summary_steps,
-                 interactive=interactive,
-                 **optim_cfg)
+            minimize(optimizer_dict['optimizer'], closure,
+                    params=params,
+                    summary_closure=log_closure,
+                    summary_steps=summary_steps,
+                    interactive=interactive,
+                    **optim_cfg)
 
-    if 'translation' in var_dict:
+    if 'translation' in var_dict and var_dict['translation'].requires_grad:
         optimizer_dict = build_optimizer([var_dict['translation']], optim_cfg)
         closure = build_vertex_closure(
             body_model, var_dict,
@@ -363,16 +380,18 @@ def run_fitting(
                  **optim_cfg)
 
     #  Optimize all model parameters with vertex-based loss
-    optimizer_dict = build_optimizer(list(var_dict.values()), optim_cfg)
+    params = [x for x in list(var_dict.values()) if x.requires_grad]
+    optimizer_dict = build_optimizer(params, optim_cfg)
     closure = build_vertex_closure(
         body_model, var_dict,
         optimizer_dict,
         def_vertices,
         vertex_loss=vertex_loss,
         per_part=False,
-        mask_ids=mask_ids)
+        mask_ids=mask_ids,
+        params_to_opt=params)
     minimize(optimizer_dict['optimizer'], closure,
-             params=list(var_dict.values()),
+             params=params,
              summary_closure=log_closure,
              summary_steps=summary_steps,
              interactive=interactive,
@@ -390,7 +409,20 @@ def run_fitting(
 
     body_model_output = body_model(
         return_full_pose=True, get_skin=True, **param_dict)
-    var_dict.update(body_model_output)
+    body_model_output_dict = {
+        'betas': body_model_output.betas,
+        'body_pose': body_model_output.body_pose,
+        'expression': body_model_output.expression,
+        'full_pose': body_model_output.full_pose,
+        'global_orient': body_model_output.global_orient,
+        'jaw_pose': body_model_output.jaw_pose,
+        'joints': body_model_output.joints,
+        'left_hand_pose': body_model_output.left_hand_pose,
+        'right_hand_pose': body_model_output.right_hand_pose,
+        'transl': body_model_output.transl,
+        'vertices': body_model_output.vertices,
+    }
+    var_dict.update(body_model_output_dict)
     var_dict['faces'] = body_model.faces
 
     return var_dict

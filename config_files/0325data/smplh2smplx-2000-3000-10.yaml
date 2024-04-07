@@ -1,12 +1,13 @@
+use_cuda: True
 datasets:
     mesh_folder:
-        data_folder: 'data/5min_data/output-output-smpl-3d'
-        frame_sample: '0 1 1'
+        data_folder: 'data/0325data/output-output-smpl-3d/mesh'
+        frame_sample: '2000 3000 10'
     num_workers: 4
 deformation_transfer_path: 'transfer_data/smplh2smplx_deftrafo_setup.pkl'
 mask_ids_fname: 'transfer_data/smplx_mask_ids.npy'
 summary_steps: 100
-output_folder: 'data/5min_data/output-output-smpl-3d/mesh-smplx'
+output_folder: 'data/0325data/transfer-smplx-3d-short'
 
 edge_fitting:
     per_part: False
@@ -15,7 +16,6 @@ optim:
     type: 'trust-ncg'
     maxiters: 100
     gtol: 1e-06
-    shape_only: False
 
 body_model:
     model_type: "smplx"

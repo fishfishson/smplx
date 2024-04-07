@@ -107,3 +107,10 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+output/
+models/
+data/
+transfer_data/meshes
+transfer_data/*.pkl
+transfer_data/*.npy
+transfer_data/*.zip

@@ -91,6 +91,7 @@ class BodyModelConfig:
     extra_joint_path: str = ''
     ext: str = 'npz'
 
+    num_betas: int = 10
     num_expression_coeffs: int = 10
 
     use_face_contour: bool = True
