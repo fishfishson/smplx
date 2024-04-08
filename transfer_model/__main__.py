@@ -22,6 +22,7 @@ import pickle
 import numpy as np
 import open3d as o3d
 import torch
+import trimesh
 from loguru import logger
 from tqdm import tqdm
 
@@ -76,14 +77,21 @@ def main() -> None:
     data_obj_dict = build_dataloader(exp_cfg)
 
     dataloader = data_obj_dict['dataloader']
+    extras = {}
     if os.path.exists(exp_cfg.optim.shape_file):
         betas = np.load(exp_cfg.optim.shape_file)['betas']
-        extras = {'betas': torch.from_numpy(betas).to(device=device).float()}
+        extras['betas'] = torch.from_numpy(betas).to(device=device).float()
 
     for ii, batch in enumerate(tqdm(dataloader)):
         for key in batch:
             if torch.is_tensor(batch[key]):
                 batch[key] = batch[key].to(device=device)
+        if os.path.exists(exp_cfg.optim.pose_file) and os.path.isdir(exp_cfg.optim.pose_file):
+            assert len(batch['paths']) == 1
+            name = os.path.basename(batch['paths'][0])
+            pose_file = os.path.join(exp_cfg.optim.pose_file, name.replace('.ply', '.npz'))
+            for k, v in np.load(pose_file).items():
+                extras[k] = torch.from_numpy(v).to(device=device).float()
         var_dict = run_fitting(
             exp_cfg, batch, body_model, def_matrix, mask_ids, **extras)
         paths = batch['paths']
@@ -95,10 +103,12 @@ def main() -> None:
             _, fname = osp.split(path)
             data = dict()
             for k, v in var_dict.items():
-                if k != 'faces':
-                    data[k] = v[ii:ii+1]
-                else:
+                if k == 'faces':
                     data[k] = v
+                elif k == 'loss':
+                    data[k] = v
+                else:
+                    data[k] = v[ii:ii+1]
             # output_path = osp.join(
             #     output_folder, f'{osp.splitext(fname)[0]}.pkl')
             # with open(output_path, 'wb') as f:
@@ -109,10 +119,11 @@ def main() -> None:
 
             output_path = osp.join(
                 output_folder, f'{osp.splitext(fname)[0]}.ply')
-            mesh = np_mesh_to_o3d(
-                data['vertices'][0], data['faces'])
-            o3d.io.write_triangle_mesh(output_path, mesh)
-
+            # mesh = np_mesh_to_o3d(
+            #     data['vertices'][0], data['faces'])
+            # o3d.io.write_triangle_mesh(output_path, mesh)
+            mesh = trimesh.Trimesh(vertices=data['vertices'][0], faces=data['faces'], process=False)
+            mesh.export(output_path)
 
 if __name__ == '__main__':
     main()

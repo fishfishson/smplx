@@ -27,7 +27,7 @@ from .utils import get_vertices_per_edge
 
 from .optimizers import build_optimizer, minimize
 from .utils import (
-    Tensor, batch_rodrigues, apply_deformation_transfer)
+    Tensor, batch_rodrigues, apply_deformation_transfer, batch_rot2aa)
 from .losses import build_loss
 
 
@@ -285,10 +285,43 @@ def run_fitting(
         for k in var_dict.keys():
             if k == 'betas' or k == 'transl': continue
             else: var_dict[k].requires_grad_(False)
-    elif 'betas' in kwargs:
-        var_dict['betas'].requires_grad_(False)
-        var_dict['betas'][:] = kwargs['betas']
-    else: pass
+    else:
+        if 'betas' in kwargs:
+            var_dict['betas'].requires_grad_(False)
+            var_dict['betas'][:] = kwargs['betas']
+        if 'expression' in kwargs:
+            var_dict['expression'].requires_grad_(False)
+            var_dict['expression'][:] = kwargs['expression']
+        if 'jaw_pose' in kwargs:
+            var_dict['jaw_pose'].requires_grad_(False)
+            var_dict['jaw_pose'][:] = batch_rot2aa(kwargs['jaw_pose'][0])[None]
+        if 'leye_pose' in kwargs:
+            var_dict['leye_pose'].requires_grad_(False)
+            var_dict['leye_pose'][:] = batch_rot2aa(kwargs['leye_pose'][0])[None]
+        if 'reye_pose' in kwargs:
+            var_dict['reye_pose'].requires_grad_(False)
+            var_dict['reye_pose'][:] = batch_rot2aa(kwargs['reye_pose'][0])[None]
+        if 'global_orient' in kwargs:
+            var_dict['global_orient'].requires_grad_(False)
+            var_dict['global_orient'][:] = batch_rot2aa(kwargs['global_orient'][0])[None]
+        if 'transl' in kwargs:
+            var_dict['transl'].requires_grad_(False)
+            var_dict['transl'][:] = kwargs['transl']
+        if 'body_pose' in kwargs:
+            body_pose = batch_rot2aa(kwargs['body_pose'][0])[None]
+            var_dict['body_pose'].requires_grad_(False)
+            var_dict['body_pose'][:] = body_pose
+            var_dict['body_pose'].requires_grad_(True)
+        if 'left_hand_pose' in kwargs:
+            left_hand_pose = batch_rot2aa(kwargs['left_hand_pose'][0])[None]
+            var_dict['left_hand_pose'].requires_grad_(False)
+            var_dict['left_hand_pose'][:] = left_hand_pose
+            var_dict['left_hand_pose'].requires_grad_(True)
+        if 'right_hand_pose' in kwargs:
+            right_hand_pose = batch_rot2aa(kwargs['right_hand_pose'][0])[None]
+            var_dict['right_hand_pose'].requires_grad_(False)
+            var_dict['right_hand_pose'][:] = right_hand_pose
+            var_dict['right_hand_pose'].requires_grad_(True)
 
     def_vertices = apply_deformation_transfer(def_matrix, vertices, faces)
 
@@ -390,7 +423,7 @@ def run_fitting(
         per_part=False,
         mask_ids=mask_ids,
         params_to_opt=params)
-    minimize(optimizer_dict['optimizer'], closure,
+    loss = minimize(optimizer_dict['optimizer'], closure,
              params=params,
              summary_closure=log_closure,
              summary_steps=summary_steps,
@@ -424,5 +457,5 @@ def run_fitting(
     }
     var_dict.update(body_model_output_dict)
     var_dict['faces'] = body_model.faces
-
+    var_dict['loss'] = loss
     return var_dict

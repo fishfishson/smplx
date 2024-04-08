@@ -15,7 +15,6 @@ optim:
     type: 'trust-ncg'
     maxiters: 100
     gtol: 1e-06
-    shape_only: False
 
 body_model:
     model_type: "smplx"
@@ -23,10 +22,10 @@ body_model:
     folder: "models"
     use_compressed: False
     use_face_contour: True
-    num_betas: 10
+    num_betas: 16
     num_expression_coeffs: 10
     smplx:
         betas:
-            num: 10
+            num: 16
         expression:
             num: 10

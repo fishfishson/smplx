@@ -1,7 +1,7 @@
 datasets:
     mesh_folder:
         data_folder: 'data/5min_data/output-output-smpl-3d/mesh-woRT'
-        frame_sample: '0 1 1'
+        frame_sample: '1500 3000 3'
     num_workers: 4
 deformation_transfer_path: 'transfer_data/smplh2smplx_deftrafo_setup.pkl'
 mask_ids_fname: 'transfer_data/smplx_mask_ids.npy'
@@ -14,7 +14,7 @@ edge_fitting:
 optim:
     type: 'trust-ncg'
     # maxiters: 100
-    maxiters: 20
+    maxiters: 25
     gtol: 1e-06
     pose_file: 'data/5min_data/output-output-smpl-3d/mesh-pre-smplx'
 
