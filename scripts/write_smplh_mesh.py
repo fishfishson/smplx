@@ -79,7 +79,7 @@ def write_cano_smplh_mesh(param, model, output_dir):
     # mesh = np_mesh_to_o3d(v, f)
     # o3d.io.write_triangle_mesh(join(output_dir, 'cano.ply'), mesh)
     mesh = trimesh.Trimesh(vertices=v, faces=f, process=False)
-    mesh.export(join(output_dir, '../cano.ply'))
+    mesh.export(join(output_dir, 'cano.ply'))
 
 
 if __name__ == '__main__':
@@ -89,6 +89,7 @@ if __name__ == '__main__':
     parser.add_argument('--input_dir', type=str, default='output-output-smpl-3d/smplfull')
     parser.add_argument('--output_dir', type=str, default='output-output-smpl-3d/mesh')
     parser.add_argument('--woRT', action='store_true', default=False)
+    parser.add_argument('--cano', action='store_true', default=False)
     args = parser.parse_args()
 
     SMPLH_CFG = dotdict()
@@ -113,12 +114,14 @@ if __name__ == '__main__':
         os.makedirs(output_dir, exist_ok=True)
         parallel_execution(smpl_params, model=model, output_dir=output_dir, action=write_smplh_mesh_woRT, 
                            print_progress=True, sequential=False)
+    elif args.cano:
+        output_dir = join(args.data_root, args.output_dir, '..')
+        write_cano_smplh_mesh(smpl_params[0], model=model, output_dir=output_dir)
     else:
         output_dir = join(args.data_root, args.output_dir)
         os.makedirs(output_dir, exist_ok=True)
         parallel_execution(smpl_params, model=model, output_dir=output_dir, action=write_smplh_mesh, 
                            print_progress=True, sequential=False)
-        write_cano_smplh_mesh(smpl_params[0], model=model, output_dir=output_dir)
         # v = model.v_template.numpy()
         # f = model.faces_tensor.numpy()
         # mesh = trimesh.Trimesh(vertices=v, faces=f, process=False)

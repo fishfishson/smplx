@@ -117,13 +117,14 @@ def main() -> None:
                 output_folder, f'{osp.splitext(fname)[0]}.npz')
             np.savez_compressed(output_path, **data)
 
-            output_path = osp.join(
-                output_folder, f'{osp.splitext(fname)[0]}.ply')
-            # mesh = np_mesh_to_o3d(
-            #     data['vertices'][0], data['faces'])
-            # o3d.io.write_triangle_mesh(output_path, mesh)
-            mesh = trimesh.Trimesh(vertices=data['vertices'][0], faces=data['faces'], process=False)
-            mesh.export(output_path)
+            if exp_cfg.vis_mesh:
+                output_path = osp.join(
+                    output_folder, f'{osp.splitext(fname)[0]}.ply')
+                # mesh = np_mesh_to_o3d(
+                #     data['vertices'][0], data['faces'])
+                # o3d.io.write_triangle_mesh(output_path, mesh)
+                mesh = trimesh.Trimesh(vertices=data['vertices'][0], faces=data['faces'], process=False)
+                mesh.export(output_path)
 
 if __name__ == '__main__':
     main()

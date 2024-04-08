@@ -55,6 +55,7 @@ class Config:
     interactive: bool = True
     batch_size: Optional[int] = 1
     color_path: str = 'data/smpl_with_colors.ply'
+    vis_mesh: bool = False
 
     optim: OptimConfig = optim_cfg
     datasets: DatasetConfig = dataset_cfg
