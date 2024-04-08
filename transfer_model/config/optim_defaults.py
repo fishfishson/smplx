@@ -59,6 +59,7 @@ class OptimConfig:
     ftol: float = -1.0
     maxiters: int = 100
     shape_only: bool = False
+    mesh_only: bool = False
     shape_file: str = ''
     pose_file: str = ''
 

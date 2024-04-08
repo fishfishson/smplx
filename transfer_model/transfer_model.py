@@ -324,6 +324,12 @@ def run_fitting(
             var_dict['right_hand_pose'].requires_grad_(True)
 
     def_vertices = apply_deformation_transfer(def_matrix, vertices, faces)
+    if optim_cfg.mesh_only:
+        mesh = {
+            'vertices': def_vertices,
+            'faces': body_model.faces
+        }
+        return mesh
 
     if mask_ids is None:
         f_sel = np.ones_like(body_model.faces[:, 0], dtype=np.bool_)

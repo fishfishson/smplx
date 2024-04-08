@@ -113,11 +113,12 @@ def main() -> None:
             #     output_folder, f'{osp.splitext(fname)[0]}.pkl')
             # with open(output_path, 'wb') as f:
             #     pickle.dump(var_dict, f)
-            output_path = osp.join(
-                output_folder, f'{osp.splitext(fname)[0]}.npz')
-            np.savez_compressed(output_path, **data)
+            if not exp_cfg.optim.mesh_only:
+                output_path = osp.join(
+                    output_folder, f'{osp.splitext(fname)[0]}.npz')
+                np.savez_compressed(output_path, **data)
 
-            if exp_cfg.vis_mesh:
+            if exp_cfg.vis_mesh or exp_cfg.optim.mesh_only:
                 output_path = osp.join(
                     output_folder, f'{osp.splitext(fname)[0]}.ply')
                 # mesh = np_mesh_to_o3d(
