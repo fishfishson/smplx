@@ -7,7 +7,6 @@ deformation_transfer_path: 'transfer_data/smplh2smplx_deftrafo_setup.pkl'
 mask_ids_fname: 'transfer_data/smplx_mask_ids.npy'
 summary_steps: 100
 output_folder: 'data/30min_data_0/output-output-smpl-3d/mesh-smplx'
-vis_mesh: True
 
 edge_fitting:
     per_part: False
@@ -17,7 +16,7 @@ optim:
     # maxiters: 100
     maxiters: 20
     gtol: 1e-06
-    pose_file: 'data/5min_data/output-output-smpl-3d/mesh-pre-smplx'
+    pose_file: 'data/30min_data_0/output-output-smpl-3d/mesh-pre-smplx'
 
 body_model:
     model_type: "smplx"

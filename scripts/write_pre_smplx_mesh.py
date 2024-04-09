@@ -15,7 +15,7 @@ from easyvolcap.utils.parallel_utils import parallel_execution
 from transfer_model.utils import batch_rodrigues, batch_rot2aa, np_mesh_to_o3d
 
 
-def write_pre_smplx_mesh(smpl_param, cano_param, body_model, output_dir):
+def write_pre_smplx_mesh(smpl_param, cano_param, body_model, output_dir, vis=False):
     with open(smpl_param) as f:
         smpl_data = json.load(f)['annots'][0]
     for k in smpl_data.keys():
@@ -41,11 +41,13 @@ def write_pre_smplx_mesh(smpl_param, cano_param, body_model, output_dir):
     # smplx_data['reye_pose'] = torch.zeros(1, 3)
     # smplx_data['jaw_pose'] = torch.zeros(1, 3)
     # smplx_data['expression'] = torch.zeros(1, 10)
-    # smplx_out = body_model(**smplx_data)
-    # v = smplx_out.vertices.cpu().numpy().reshape(-1, 3)
-    # f = body_model.faces
-    # mesh = trimesh.Trimesh(vertices=v, faces=f, process=False)
-    # mesh.export(join(output_dir, os.path.basename(smpl_param).replace('.json', '.ply')))
+
+    if vis:
+        smplx_out = body_model(**smplx_data)
+        v = smplx_out.vertices.cpu().numpy().reshape(-1, 3)
+        f = body_model.faces
+        mesh = trimesh.Trimesh(vertices=v, faces=f, process=False)
+        mesh.export(join(output_dir, os.path.basename(smpl_param).replace('.json', '.ply')))
     for k, v in smplx_data.items():
         smplx_data[k] = v.numpy()
     np.savez_compressed(join(output_dir, os.path.basename(smpl_param).replace('.json', '.npz')), **smplx_data)
@@ -55,7 +57,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_root', type=str, required=True)
     parser.add_argument('--input_dir', type=str, default='output-output-smpl-3d/smplfull')
-    parser.add_argument('--output_dir', type=str, default='output-output-smpl-3d/mesh-pre-smplx')
+    parser.add_argument('--output_dir', type=str, default='output-output-smpl-3d/mesh-pre-smplx-debug')
+    parser.add_argument('--vis', action='store_true', default=False)
     args = parser.parse_args()
 
     body_model = smplx.SMPLXLayer(model_path='./models/smplx',
@@ -83,7 +86,7 @@ if __name__ == '__main__':
     # cano_mesh.export('cano.ply')
 
     smpl_params = [join(input_dir, x) for x in sorted(os.listdir(input_dir))]
-    parallel_execution(smpl_params, cano_param=cano_param, body_model=body_model, output_dir=output_dir, 
+    parallel_execution(smpl_params, cano_param=cano_param, body_model=body_model, output_dir=output_dir, vis=args.vis,
                        action=write_pre_smplx_mesh,
                        print_progress=True,
                        sequential=False)

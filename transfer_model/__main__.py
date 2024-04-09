@@ -78,22 +78,29 @@ def main() -> None:
 
     dataloader = data_obj_dict['dataloader']
     extras = {}
-    if os.path.exists(exp_cfg.optim.shape_file):
-        betas = np.load(exp_cfg.optim.shape_file)['betas']
-        extras['betas'] = torch.from_numpy(betas).to(device=device).float()
 
     for ii, batch in enumerate(tqdm(dataloader)):
         for key in batch:
             if torch.is_tensor(batch[key]):
                 batch[key] = batch[key].to(device=device)
-        if os.path.exists(exp_cfg.optim.pose_file) and os.path.isdir(exp_cfg.optim.pose_file):
-            assert len(batch['paths']) == 1
-            name = os.path.basename(batch['paths'][0])
-            pose_file = os.path.join(exp_cfg.optim.pose_file, name.replace('.ply', '.npz'))
-            for k, v in np.load(pose_file).items():
-                extras[k] = torch.from_numpy(v).to(device=device).float()
+        if os.path.exists(exp_cfg.optim.shape_file):
+            betas = np.load(exp_cfg.optim.shape_file)['betas']
+            extras['betas'] = torch.from_numpy(betas).to(device=device).float().expand(len(batch['paths']), -1)
+        elif os.path.exists(exp_cfg.optim.pose_file) and os.path.isdir(exp_cfg.optim.pose_file):
+            for j in range(len(batch['paths'])):
+                name = os.path.basename(batch['paths'][j])
+                pose_file = os.path.join(exp_cfg.optim.pose_file, name.replace('.ply', '.npz'))
+                pose = np.load(pose_file)
+                for k, v in pose.items():
+                    if k in extras:
+                        extras[k].append(torch.from_numpy(v).to(device=device).float())
+                    else:
+                        extras[k] = [torch.from_numpy(v).to(device=device).float()]
+            for k, v in extras.items():
+                extras[k] = torch.cat(v, dim=0)
         var_dict = run_fitting(
             exp_cfg, batch, body_model, def_matrix, mask_ids, **extras)
+        extras = {}
         paths = batch['paths']
         for k, v in var_dict.items():
             if torch.is_tensor(v):

@@ -16,7 +16,7 @@ optim:
     type: 'trust-ncg'
     maxiters: 100
     gtol: 1e-06
-    pose_file: 'data/5min_data/output-output-smpl-3d/mesh-pre-smplx'
+    pose_file: 'data/30min_data_0/output-output-smpl-3d/mesh-pre-smplx'
     mesh_only: True
 
 body_model:

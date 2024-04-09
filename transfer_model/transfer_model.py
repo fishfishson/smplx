@@ -294,31 +294,31 @@ def run_fitting(
             var_dict['expression'][:] = kwargs['expression']
         if 'jaw_pose' in kwargs:
             var_dict['jaw_pose'].requires_grad_(False)
-            var_dict['jaw_pose'][:] = batch_rot2aa(kwargs['jaw_pose'][0])[None]
+            var_dict['jaw_pose'][:] = batch_rot2aa(kwargs['jaw_pose'].reshape(-1, 3, 3)).reshape(batch_size, -1, 3)
         if 'leye_pose' in kwargs:
             var_dict['leye_pose'].requires_grad_(False)
-            var_dict['leye_pose'][:] = batch_rot2aa(kwargs['leye_pose'][0])[None]
+            var_dict['leye_pose'][:] = batch_rot2aa(kwargs['leye_pose'].reshape(-1, 3, 3)).reshape(batch_size, -1, 3)
         if 'reye_pose' in kwargs:
             var_dict['reye_pose'].requires_grad_(False)
-            var_dict['reye_pose'][:] = batch_rot2aa(kwargs['reye_pose'][0])[None]
+            var_dict['reye_pose'][:] = batch_rot2aa(kwargs['reye_pose'].reshape(-1, 3, 3)).reshape(batch_size, -1, 3)
         if 'global_orient' in kwargs:
             var_dict['global_orient'].requires_grad_(False)
-            var_dict['global_orient'][:] = batch_rot2aa(kwargs['global_orient'][0])[None]
+            var_dict['global_orient'][:] = batch_rot2aa(kwargs['global_orient'].reshape(-1, 3, 3)).reshape(batch_size, -1, 3)
         if 'transl' in kwargs:
             var_dict['transl'].requires_grad_(False)
             var_dict['transl'][:] = kwargs['transl']
         if 'body_pose' in kwargs:
-            body_pose = batch_rot2aa(kwargs['body_pose'][0])[None]
+            body_pose = batch_rot2aa(kwargs['body_pose'].reshape(-1, 3, 3)).reshape(batch_size, -1, 3)
             var_dict['body_pose'].requires_grad_(False)
             var_dict['body_pose'][:] = body_pose
             var_dict['body_pose'].requires_grad_(True)
         if 'left_hand_pose' in kwargs:
-            left_hand_pose = batch_rot2aa(kwargs['left_hand_pose'][0])[None]
+            left_hand_pose = batch_rot2aa(kwargs['left_hand_pose'].reshape(-1, 3, 3)).reshape(batch_size, -1, 3)
             var_dict['left_hand_pose'].requires_grad_(False)
             var_dict['left_hand_pose'][:] = left_hand_pose
             var_dict['left_hand_pose'].requires_grad_(True)
         if 'right_hand_pose' in kwargs:
-            right_hand_pose = batch_rot2aa(kwargs['right_hand_pose'][0])[None]
+            right_hand_pose = batch_rot2aa(kwargs['right_hand_pose'].reshape(-1, 3, 3)).reshape(batch_size, -1, 3)
             var_dict['right_hand_pose'].requires_grad_(False)
             var_dict['right_hand_pose'][:] = right_hand_pose
             var_dict['right_hand_pose'].requires_grad_(True)
