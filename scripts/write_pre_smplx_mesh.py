@@ -16,7 +16,7 @@ from transfer_model.utils import batch_rodrigues, batch_rot2aa, np_mesh_to_o3d
 
 
 def write_pre_smplx_mesh(smpl_param, cano_param, body_model, output_dir, vis=False):
-    with open(smpl_param) as f:
+    with open(smpl_param, 'r') as f:
         smpl_data = json.load(f)['annots'][0]
     for k in smpl_data.keys():
         smpl_data[k] = torch.from_numpy(np.array(smpl_data[k])).float()

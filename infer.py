@@ -15,7 +15,7 @@ if __name__ == "__main__":
     parser.add_argument('--model_path', type=str, default='./models/smplx') 
     args = parser.parse_args()
 
-    with open(args.smplh_path) as f:
+    with open(args.smplh_path, 'r') as f:
         smplh_data = json.load(f)['annots'][0]
     Rh = batch_rodrigues(torch.from_numpy(np.array(smplh_data['Rh']))).float()
     Th = torch.from_numpy(np.array(smplh_data['Th'])).float()

@@ -16,7 +16,7 @@ from easymocap.bodymodel.smplx import SMPLModel, SMPLHModel
 
 
 def write_smplh_mesh(param, model, output_dir):
-    with open(param) as f:
+    with open(param, 'r') as f:
         data = json.load(f)['annots'][0]
     for k in data.keys():
         data[k] = torch.from_numpy(np.array(data[k])).float()
@@ -37,7 +37,7 @@ def write_smplh_mesh(param, model, output_dir):
 
 
 def write_smplh_mesh_woRT(param, model, output_dir):
-    with open(param) as f:
+    with open(param, 'r') as f:
         data = json.load(f)['annots'][0]
     for k in data.keys():
         data[k] = torch.from_numpy(np.array(data[k])).float()
@@ -60,7 +60,7 @@ def write_smplh_mesh_woRT(param, model, output_dir):
 
 
 def write_cano_smplh_mesh(param, model, output_dir):
-    with open(param) as f:
+    with open(param, 'r') as f:
         data = json.load(f)['annots'][0]
     for k in data.keys():
         data[k] = torch.from_numpy(np.array(data[k])).float()
